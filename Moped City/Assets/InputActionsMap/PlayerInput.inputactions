@@ -9,7 +9,7 @@
                     "name": "Move",
                     "type": "Value",
                     "id": "2a1e4e31-ca5b-493d-a476-b76a09727fcd",
-                    "expectedControlType": "Vector2",
+                    "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -17,9 +17,9 @@
             ],
             "bindings": [
                 {
-                    "name": "2D Vector",
-                    "id": "915e4875-da33-4663-ae61-2bbaf26e15be",
-                    "path": "2DVector",
+                    "name": "1D Axis",
+                    "id": "210ea53f-f388-449a-b5b0-c33ed9876e0f",
+                    "path": "1DAxis",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -28,19 +28,8 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "up",
-                    "id": "bba6292e-20d5-46c4-8ccb-de428d2e5caa",
-                    "path": "<Keyboard>/w",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "down",
-                    "id": "632f17aa-3cb7-49c7-8098-ff8dcf0b3b68",
+                    "name": "negative",
+                    "id": "dd29bd93-f207-4036-922c-f02d2c033303",
                     "path": "<Keyboard>/s",
                     "interactions": "",
                     "processors": "",
@@ -50,20 +39,9 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "left",
-                    "id": "a838e95a-b161-4f67-aa02-b7d3d01b6ef3",
-                    "path": "<Keyboard>/a",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "right",
-                    "id": "d50b0962-6a25-4bbf-8b70-09debec0eac1",
-                    "path": "<Keyboard>/d",
+                    "name": "positive",
+                    "id": "bbf1d692-50a4-444f-8daf-fa339a02ee10",
+                    "path": "<Keyboard>/w",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
