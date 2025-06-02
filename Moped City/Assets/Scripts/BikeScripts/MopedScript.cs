@@ -12,14 +12,19 @@ public class MopedScript : MonoBehaviour
     public SuspensionAnchor2D[] anchors;
 
     [Header("Ground Movement")]
-    public float moveSpeed = 5f;
+    public float maxSpeed = 5f;              // Maximum speed (formerly moveSpeed)
+    public float acceleration = 10f;          // How quickly the bike accelerates
+    public float deceleration = 15f;         // How quickly the bike slows down
+    public float directionChangeMultiplier = 0.5f; // Reduces acceleration when changing directions
 
     [Header("Air Control")]
     public float flipTorque = 400f;         // Force of the flip rotation
     public float maxAngularVelocity = 900f; // Maximum rotation speed
 
     private float moveInput;
+    private float currentSpeed = 0f;         // Current speed of the bike
     private bool isGrounded;
+    private float lastMoveDirection = 0f;    // Tracks last movement direction
 
     void Awake()
     {
@@ -59,23 +64,54 @@ public class MopedScript : MonoBehaviour
 
         if (isGrounded)
         {
-            // Ground movement
-            rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
+            // Ground movement with acceleration
+            ApplyGroundMovement();
         }
         else
         {
             // Air control - Flips
             ApplyFlipRotation();
+            // Maintain some horizontal momentum in air
+            rb.linearVelocity = new Vector2(currentSpeed, rb.linearVelocity.y);
         }
+
+        // Update last direction when there's significant movement
+        if (Mathf.Abs(moveInput) > 0.1f)
+        {
+            lastMoveDirection = Mathf.Sign(moveInput);
+        }
+    }
+
+    private void ApplyGroundMovement()
+    {
+        float targetSpeed = moveInput * maxSpeed;
+        float accelerationRate = acceleration;
+
+        // Check if we're changing directions
+        if (currentSpeed != 0 && Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed))
+        {
+            // Apply direction change penalty
+            accelerationRate *= directionChangeMultiplier;
+        }
+
+        // If no input, decelerate
+        if (Mathf.Abs(moveInput) < 0.1f)
+        {
+            currentSpeed = Mathf.MoveTowards(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
+        }
+        else
+        {
+            // Accelerate towards target speed
+            currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accelerationRate * Time.fixedDeltaTime);
+        }
+
+        // Apply the movement
+        rb.linearVelocity = new Vector2(currentSpeed, rb.linearVelocity.y);
     }
 
     private void ApplyFlipRotation()
     {
-        // Forward input causes forward flip (negative rotation in 2D)
-        // Backward input causes backward flip (positive rotation in 2D)
-        float flipDirection = -moveInput; // Invert for correct flip direction
-
-        // Apply flip torque
+        float flipDirection = -moveInput;
         rb.AddTorque(flipDirection * flipTorque);
     }
 

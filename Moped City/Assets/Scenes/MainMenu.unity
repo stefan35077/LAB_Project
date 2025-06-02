@@ -360,7 +360,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 225349429}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -1833,6 +1833,6 @@ SceneRoots:
   - {fileID: 1564715702}
   - {fileID: 308183923}
   - {fileID: 1815621558}
+  - {fileID: 1973602008}
   - {fileID: 343928748}
   - {fileID: 948323189}
-  - {fileID: 1973602008}

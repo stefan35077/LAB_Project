@@ -2,24 +2,48 @@ using UnityEngine;
 
 public class SmoothCameraFollow : MonoBehaviour
 {
-    public Transform target; // The object the camera will follow
-    public Vector3 offset = new Vector3(0, 5, -10); // Offset from the target
-    public float smoothSpeed = 0.125f; // Smoothness factor (lower = smoother)
+    public Transform target;
+    public Vector3 baseOffset = new Vector3(0, 5, -10);
+    public float smoothSpeed = 0.125f;
+
+    [Header("Zoom Settings")]
+    public float minZoom = 5f;
+    public float maxZoom = 15f;
+    public float zoomSpeed = 5f;
+    public float velocityToZoomFactor = 0.5f;
+
+    private Camera cam;
+    private Rigidbody targetRb;
+
+    void Start()
+    {
+        cam = Camera.main;
+
+        if (target != null)
+            targetRb = target.GetComponent<Rigidbody>();
+
+        if (cam == null)
+        {
+            Debug.LogError("Main camera not found!");
+            enabled = false;
+        }
+    }
 
     void LateUpdate()
     {
-        if (target == null) return; // Ensure the target is assigned
+        if (target == null) return;
 
-        // Desired position of the camera
-        Vector3 desiredPosition = target.position + offset;
-
-        // Smoothly interpolate between current and desired position
+        // Move camera smoothly
+        Vector3 desiredPosition = target.position + baseOffset;
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
-
-        // Update the camera's position
         transform.position = smoothedPosition;
 
-        // Optional: Make the camera look at the target
+        // Look at target
         transform.LookAt(target);
+
+        // --- Dynamic Zoom ---
+        float speed = targetRb != null ? targetRb.linearVelocity.magnitude : 0f;
+        float targetZoom = Mathf.Lerp(minZoom, maxZoom, speed * velocityToZoomFactor);
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetZoom, Time.deltaTime * zoomSpeed);
     }
 }
