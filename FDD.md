@@ -36,3 +36,8 @@ The goal of the game is to do get the most amount of points, you can obtain thes
 ### Won't
 * Player falls of bike when driving into walls at high speed.
 * Player falls over when taking to sharp turns.
+
+
+# Changed Game Idea
+The game was to big so I decided to rethink the idea. I will recreate a trials like game but instead of a dirtbike you will drive a moped. 
+You complete the obstacle course and win the level.
