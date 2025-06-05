@@ -28,6 +28,8 @@ public class SceneManager : MonoBehaviour
 
     private void Awake()
     {
+        SceneManager.DontDestroyOnLoad(this);
+
         // Singleton pattern
         if (Instance == null)
         {
@@ -70,8 +72,20 @@ public class SceneManager : MonoBehaviour
         // Change to specified phase
         ChangePhase(phase);
 
+        // Ensure ButtonEffect refreshes after scene is fully loaded
+        if (ButtonEffect.Instance != null)
+        {
+            ButtonEffect.Instance.RefreshButtons();
+        }
+
         // Fade back in
         yield return StartCoroutine(FadeRoutine(0f));
+
+        // Refresh buttons again after fade to ensure everything is properly set up
+        if (ButtonEffect.Instance != null)
+        {
+            ButtonEffect.Instance.RefreshButtons();
+        }
     }
 
     private IEnumerator FadeRoutine(float targetAlpha)

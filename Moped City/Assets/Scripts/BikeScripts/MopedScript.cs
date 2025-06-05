@@ -111,7 +111,7 @@ public class MopedScript : MonoBehaviour
 
     private void ApplyFlipRotation()
     {
-        float flipDirection = -moveInput;
+        float flipDirection = moveInput;
         rb.AddTorque(flipDirection * flipTorque);
     }
 

@@ -2,15 +2,14 @@ using UnityEngine;
 
 public class WinBlock : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        
-    }
+        Debug.Log("Collided with " + collision.name);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        if (collision.CompareTag("Player"))
+        {
+            SceneManager.Instance.LoadScene("MainMenu", SceneManager.GamePhase.MainMenu);
+        }
+
     }
 }

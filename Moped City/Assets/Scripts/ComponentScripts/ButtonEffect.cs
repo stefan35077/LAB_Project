@@ -19,6 +19,22 @@ public class ButtonEffect : MonoBehaviour
     private Button[] allButtons;
     private Vector3[] originalScales;
 
+
+    private void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        RefreshButtons();
+    }
+
     private void Awake()
     {
         // Singleton setup
