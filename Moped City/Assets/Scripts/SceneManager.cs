@@ -120,7 +120,7 @@ public class SceneManager : MonoBehaviour
         LoadScene("MainMenu", GamePhase.MainMenu);
     }
 
-    public void PauseGame()
+    public void GameOverScreen()
     {
         if (currentPhase == GamePhase.Gameplay)
         {

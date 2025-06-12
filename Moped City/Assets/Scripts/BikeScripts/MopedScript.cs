@@ -1,6 +1,7 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class MopedScript : MonoBehaviour
@@ -22,6 +23,7 @@ public class MopedScript : MonoBehaviour
     public float maxAngularVelocity = 900f; // Maximum rotation speed
 
     private float moveInput;
+    private float rotateInput;
     private float currentSpeed = 0f;         // Current speed of the bike
     private bool isGrounded;
     private float lastMoveDirection = 0f;    // Tracks last movement direction
@@ -44,12 +46,16 @@ public class MopedScript : MonoBehaviour
         playerMap.Enable();
         playerMap.Move.performed += OnMove;
         playerMap.Move.canceled += OnMove;
+        playerMap.Rotate.performed += OnRotate;
+        playerMap.Rotate.canceled += OnRotate;
     }
 
     private void OnDisable()
     {
         playerMap.Move.performed -= OnMove;
         playerMap.Move.canceled -= OnMove;
+        playerMap.Rotate.performed -= OnRotate;
+        playerMap.Rotate.canceled -= OnRotate;
         playerMap.Disable();
     }
 
@@ -109,9 +115,14 @@ public class MopedScript : MonoBehaviour
         rb.linearVelocity = new Vector2(currentSpeed, rb.linearVelocity.y);
     }
 
+    public void OnRotate(InputAction.CallbackContext ctx)
+    {
+        rotateInput = ctx.ReadValue<float>();
+    }
+
     private void ApplyFlipRotation()
     {
-        float flipDirection = moveInput;
+        float flipDirection = -rotateInput;
         rb.AddTorque(flipDirection * flipTorque);
     }
 
