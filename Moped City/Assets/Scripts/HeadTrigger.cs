@@ -2,8 +2,16 @@ using UnityEngine;
 
 public class HeadTrigger : MonoBehaviour
 {
-    private void OnCollisionEnter(Collision collision)
+    SceneManager sceneManager;
+
+    private void Start()
     {
-        SceneManager.Instance.GameOverScreen();
+        sceneManager = FindFirstObjectByType<SceneManager>();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Debug.Log("Collided with " + collision.name);
+        sceneManager.GameOverScreen();
     }
 }

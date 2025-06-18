@@ -2,13 +2,19 @@ using UnityEngine;
 
 public class WinBlock : MonoBehaviour
 {
+    SceneManager sceneManager;
+    void Start()
+    {
+        sceneManager = FindFirstObjectByType<SceneManager>();
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Debug.Log("Collided with " + collision.name);
 
         if (collision.CompareTag("Player"))
         {
-            SceneManager.Instance.LoadScene("MainMenu", SceneManager.GamePhase.MainMenu);
+            sceneManager.LoadScene("MainMenu", SceneManager.GamePhase.MainMenu);
         }
 
     }

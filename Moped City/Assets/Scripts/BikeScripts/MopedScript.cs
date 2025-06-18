@@ -6,6 +6,9 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(Rigidbody2D))]
 public class MopedScript : MonoBehaviour
 {
+    // SINGLETON INSTANCE
+    public static MopedScript Instance { get; private set; }
+
     private PlayerInput controls;
     private PlayerInput.PlayerControllerActions playerMap;
 
@@ -13,28 +16,38 @@ public class MopedScript : MonoBehaviour
     public SuspensionAnchor2D[] anchors;
 
     [Header("Ground Movement")]
-    public float maxSpeed = 5f;              // Maximum speed (formerly moveSpeed)
-    public float acceleration = 10f;          // How quickly the bike accelerates
-    public float deceleration = 15f;         // How quickly the bike slows down
-    public float directionChangeMultiplier = 0.5f; // Reduces acceleration when changing directions
+    public float maxSpeed = 5f;
+    public float acceleration = 10f;
+    public float deceleration = 15f;
+    public float directionChangeMultiplier = 0.5f;
 
     [Header("Air Control")]
-    public float flipTorque = 400f;         // Force of the flip rotation
-    public float maxAngularVelocity = 900f; // Maximum rotation speed
+    public float flipTorque = 400f;
+    public float maxAngularVelocity = 900f;
 
     private float moveInput;
     private float rotateInput;
-    private float currentSpeed = 0f;         // Current speed of the bike
+    private float currentSpeed = 0f;
     private bool isGrounded;
-    private float lastMoveDirection = 0f;    // Tracks last movement direction
+    private float lastMoveDirection = 0f;
+
+    private bool isDead = false;
 
     void Awake()
     {
+        // IMPLEMENT SINGLETON PATTERN
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         controls = new PlayerInput();
         playerMap = controls.PlayerController;
         rb = GetComponent<Rigidbody2D>();
 
-        // Find suspension anchors if not assigned
+        // IF ANCHORS ARE NOT ASSIGNED, FIND THEM AUTOMATICALLY IN CHILDREN
         if (anchors == null || anchors.Length == 0)
         {
             anchors = GetComponentsInChildren<SuspensionAnchor2D>();
@@ -66,22 +79,20 @@ public class MopedScript : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead) return;
+
         CheckGrounded();
 
         if (isGrounded)
         {
-            // Ground movement with acceleration
             ApplyGroundMovement();
         }
         else
         {
-            // Air control - Flips
             ApplyFlipRotation();
-            // Maintain some horizontal momentum in air
             rb.linearVelocity = new Vector2(currentSpeed, rb.linearVelocity.y);
         }
 
-        // Update last direction when there's significant movement
         if (Mathf.Abs(moveInput) > 0.1f)
         {
             lastMoveDirection = Mathf.Sign(moveInput);
@@ -93,25 +104,23 @@ public class MopedScript : MonoBehaviour
         float targetSpeed = moveInput * maxSpeed;
         float accelerationRate = acceleration;
 
-        // Check if we're changing directions
+        // IF CHANGING DIRECTION, REDUCE ACCELERATION TO AVOID SNAPPY TURNS
         if (currentSpeed != 0 && Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed))
         {
-            // Apply direction change penalty
             accelerationRate *= directionChangeMultiplier;
         }
 
-        // If no input, decelerate
+        // IF NO INPUT, SLOW DOWN SMOOTHLY
         if (Mathf.Abs(moveInput) < 0.1f)
         {
             currentSpeed = Mathf.MoveTowards(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
         }
         else
         {
-            // Accelerate towards target speed
+            // ACCELERATE TOWARDS TARGET SPEED
             currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accelerationRate * Time.fixedDeltaTime);
         }
 
-        // Apply the movement
         rb.linearVelocity = new Vector2(currentSpeed, rb.linearVelocity.y);
     }
 
@@ -122,15 +131,19 @@ public class MopedScript : MonoBehaviour
 
     private void ApplyFlipRotation()
     {
+        // APPLY TORQUE FOR FLIP BASED ON ROTATE INPUT, INVERTED FOR CONTROLS
         float flipDirection = -rotateInput;
         rb.AddTorque(flipDirection * flipTorque);
     }
 
     private void CheckGrounded()
     {
+        // CHECK IF ANY SUSPENSION ANCHOR IS TOUCHING GROUND BY REFLECTING INTO PRIVATE FIELD
         isGrounded = false;
+
         foreach (var anchor in anchors)
         {
+            // REFLECT TO ACCESS PRIVATE 'lastHit' FIELD IN SuspensionAnchor2D
             var hitInfo = (RaycastHit2D)typeof(SuspensionAnchor2D)
                 .GetField("lastHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(anchor);
@@ -141,5 +154,13 @@ public class MopedScript : MonoBehaviour
                 break;
             }
         }
+    }
+
+    public void HasDied()
+    {
+        isDead = true;
+        playerMap.Disable();
+        moveInput = 0f;
+        rotateInput = 0f;
     }
 }

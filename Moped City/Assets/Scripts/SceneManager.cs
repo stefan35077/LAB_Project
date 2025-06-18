@@ -5,11 +5,11 @@ using System;
 
 public class SceneManager : MonoBehaviour
 {
-    public static SceneManager Instance { get; private set; }
-
     [Header("Transition Settings")]
     [SerializeField] private float fadeSpeed = 1f;
     public CanvasGroup fadeCanvasGroup;
+
+    [SerializeField] private GameObject GameOverUI;
 
     public enum GamePhase
     {
@@ -25,22 +25,6 @@ public class SceneManager : MonoBehaviour
     public GamePhase CurrentPhase => currentPhase;
 
     public event Action<GamePhase> OnPhaseChanged;
-
-    private void Awake()
-    {
-        SceneManager.DontDestroyOnLoad(this);
-
-        // Singleton pattern
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
 
     public void ChangePhase(GamePhase newPhase)
     {
@@ -122,11 +106,9 @@ public class SceneManager : MonoBehaviour
 
     public void GameOverScreen()
     {
-        if (currentPhase == GamePhase.Gameplay)
-        {
-            Time.timeScale = 0f;
-            ChangePhase(GamePhase.Paused);
-        }
+        Debug.Log("Game Over! Transitioning to GameOver phase.");
+        ChangePhase(GamePhase.Paused);
+        GameOverUI.SetActive(true);
     }
 
     public void ResumeGame()
@@ -135,14 +117,7 @@ public class SceneManager : MonoBehaviour
         {
             Time.timeScale = 1f;
             ChangePhase(GamePhase.Gameplay);
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
+            GameOverUI.SetActive(false);
         }
     }
 }
