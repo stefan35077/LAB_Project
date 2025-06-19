@@ -139,13 +139,7 @@ public class SuspensionAnchor2D : MonoBehaviour
         // Z behouden voor visuele stabiliteit in 2D/2.5D
         targetPos.z = wheelVisual.position.z;
 
-        // Smooth beweging
-        wheelVisual.position = Vector3.SmoothDamp(
-            wheelVisual.position,
-            targetPos,
-            ref currentVelocity,
-            1f / wheelSmoothSpeed
-        );
+        wheelVisual.position = targetPos;
 
         // Optioneel: wiel laten draaien
         if (rotateWheel)
@@ -154,9 +148,7 @@ public class SuspensionAnchor2D : MonoBehaviour
             wheelRotation += horizontalSpeed * rotationSpeed * Time.deltaTime;
             wheelRotation %= 360f;
 
-            Quaternion baseRotation = Quaternion.Euler(90, 0, 0);
-            Quaternion spinRotation = Quaternion.Euler(wheelRotation, 0, 0);
-            wheelVisual.rotation = baseRotation * spinRotation;
+            wheelVisual.rotation = Quaternion.Euler(90f, -wheelRotation, -wheelRotation);
         }
         else
         {
