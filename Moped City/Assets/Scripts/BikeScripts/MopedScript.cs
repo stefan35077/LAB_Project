@@ -131,7 +131,7 @@ public class MopedScript : MonoBehaviour
 
     private void ApplyFlipRotation()
     {
-        // APPLY TORQUE FOR FLIP BASED ON ROTATE INPUT, INVERTED FOR CONTROLS
+        // APPLY TORQUE FOR FLIP BASED ON ROTATE INPUT
         float flipDirection = -rotateInput;
         rb.AddTorque(flipDirection * flipTorque);
     }

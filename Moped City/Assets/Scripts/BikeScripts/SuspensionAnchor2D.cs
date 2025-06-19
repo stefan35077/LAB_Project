@@ -17,9 +17,9 @@ public class SuspensionAnchor2D : MonoBehaviour
     public float wheelRadius = 0.25f;
     public bool rotateWheel = true;
     public float rotationSpeed = 200f;
-    public float wheelSmoothSpeed = 12f;    // Smoothing factor for wheel movement
-    private Vector3 targetWheelPosition;    // Target position for smooth interpolation
-    private Vector3 currentVelocity;        // Reference velocity for SmoothDamp
+    public float wheelSmoothSpeed = 12f;
+    private Vector3 targetWheelPosition;
+    private Vector3 currentVelocity;
 
     [Header("Stability Settings")]
     public float stabilityForce = 0.5f;
@@ -31,10 +31,14 @@ public class SuspensionAnchor2D : MonoBehaviour
     private RaycastHit2D lastHit;
     private float springVelocity;
     private float wheelRotation;
-    private float currentCompression;       // Track current suspension compression
+    private float currentCompression;
 
     [Header("Debug")]
     public bool showDebugRays = true;
+
+
+    private bool suspensionActive;
+    private Vector2 cachedHitPoint;
 
     void Awake()
     {
@@ -47,7 +51,6 @@ public class SuspensionAnchor2D : MonoBehaviour
         }
         lastLength = rayLength;
 
-        // Initialize wheel position
         if (wheelVisual != null)
         {
             targetWheelPosition = wheelVisual.position;
@@ -77,35 +80,38 @@ public class SuspensionAnchor2D : MonoBehaviour
         if (!lastHit.collider)
         {
             currentCompression = 0;
+            suspensionActive = false;
             return;
         }
 
-        // Calculate spring compression
+        suspensionActive = true;
+        cachedHitPoint = lastHit.point;
+
+        // CALCULATE HOW MUCH THE SUSPENSION IS COMPRESSED BASED ON RAYCAST HIT DISTANCE
         float suspensionLength = lastHit.distance;
         currentCompression = rayLength - suspensionLength;
 
-        // Calculate spring velocity
+        // CALCULATE HOW FAST THE SPRING LENGTH IS CHANGING BETWEEN FRAMES
         springVelocity = (suspensionLength - lastLength) / Time.fixedDeltaTime;
         lastLength = suspensionLength;
 
-        // Calculate suspension force
+        // THE SPRING FORCE IS BASED ON HOW MUCH THE SUSPENSION IS COMPRESSED FROM ITS REST HEIGHT
         float springForce = (currentCompression - restHeight) * springStrength;
         float dampingForce = springVelocity * springDamping;
         float suspensionForce = springForce - dampingForce;
 
         if (suspensionForce > 0)
         {
-            // Use the opposite of ray direction for force
             Vector2 forceDir = (Vector2)(transform.TransformDirection(Vector3.up));
             Vector2 forcePoint = lastHit.point;
 
-            // Apply suspension force
+            // APPLY FORCE AT CONTACT POINT TO SIMULATE SUSPENSION REACTING TO GROUND CONTACT
             bikeRigidbody.AddForceAtPosition(forceDir * suspensionForce, forcePoint, ForceMode2D.Force);
 
-            // Improved stability system
+            // ADD TORQUE TO KEEP THE BIKE UPRIGHT BASED ON ROTATION AND ANGULAR VELOCITY
             ApplyStabilityForces();
 
-            // Gravity compensation based on compression
+            // ADD A PORTION OF GRAVITY BACK BASED ON HOW COMPRESSED THE SUSPENSION IS (SIMULATES MASS PRESSING DOWN)
             float compressionRatio = Mathf.Clamp01(currentCompression / rayLength);
             Vector2 gravityForce = -Physics2D.gravity * bikeRigidbody.mass * compressionRatio;
             bikeRigidbody.AddForceAtPosition(gravityForce * Time.fixedDeltaTime, forcePoint, ForceMode2D.Force);
@@ -116,24 +122,24 @@ public class SuspensionAnchor2D : MonoBehaviour
     {
         if (wheelVisual == null) return;
 
-        // Calculate target wheel position, maintaining X position relative to suspension anchor
-        Vector3 targetPos = wheelVisual.position;
+        Vector3 upDirection = transform.TransformDirection(Vector3.up);
+        Vector3 targetPos;
+
         if (lastHit.collider != null)
         {
-            // Only update Y position based on suspension compression
-            float compressedOffset = Mathf.Lerp(wheelRadius, wheelRadius * 0.8f, currentCompression / rayLength);
-            targetPos.y = lastHit.point.y + compressedOffset;
+            // Als we de grond raken ? plaats het wiel visueel op het contactpunt + radius
+            targetPos = (Vector3)lastHit.point + upDirection * wheelRadius;
         }
         else
         {
-            // When not grounded, extend to maximum length while maintaining X position
-            targetPos.y = transform.position.y - (rayLength - wheelRadius);
+            // Als we in de lucht zijn ? plaats het wiel op de rustpositie van de vering
+            targetPos = transform.position - upDirection * (rayLength - restHeight - wheelRadius);
         }
 
-        // Keep X position locked to suspension anchor point
-        targetPos.x = transform.position.x;
+        // Z behouden voor visuele stabiliteit in 2D/2.5D
+        targetPos.z = wheelVisual.position.z;
 
-        // Smoothly move wheel on Y axis only
+        // Smooth beweging
         wheelVisual.position = Vector3.SmoothDamp(
             wheelVisual.position,
             targetPos,
@@ -141,48 +147,46 @@ public class SuspensionAnchor2D : MonoBehaviour
             1f / wheelSmoothSpeed
         );
 
-        // Update wheel rotation with correct axis of rotation
+        // Optioneel: wiel laten draaien
         if (rotateWheel)
         {
-            // Calculate rotation based on horizontal velocity
             float horizontalSpeed = bikeRigidbody.linearVelocity.x;
             wheelRotation += horizontalSpeed * rotationSpeed * Time.deltaTime;
             wheelRotation %= 360f;
 
-            // Create rotation around X-axis while maintaining initial X:90 orientation
             Quaternion baseRotation = Quaternion.Euler(90, 0, 0);
             Quaternion spinRotation = Quaternion.Euler(wheelRotation, 0, 0);
             wheelVisual.rotation = baseRotation * spinRotation;
         }
         else
         {
-            // Keep wheel at X:90 and only match bike's rotation if needed
             wheelVisual.rotation = Quaternion.Euler(90, 0, 0);
         }
     }
 
+
     void ApplyStabilityForces()
     {
-        // Get current state
         float currentAngle = bikeRigidbody.rotation;
         float angularVel = bikeRigidbody.angularVelocity;
 
-        // Normalize angle to -180 to 180 range
+        // NORMALIZE ANGLE TO BE BETWEEN -180 AND 180 DEGREES
         while (currentAngle > 180f) currentAngle -= 360f;
         while (currentAngle < -180f) currentAngle += 360f;
 
-        // Calculate stabilizing torque
+        // GENERATE TORQUE TO STABILIZE THE BIKE BASED ON ANGLE AND VELOCITY
         float angleStability = -currentAngle * stabilityForce;
         float rotationDamping = -angularVel * angularDamping;
 
-        // Combine and clamp the total torque
         float totalTorque = angleStability + rotationDamping;
+
+        // LIMIT TORQUE TO A MAXIMUM VALUE TO PREVENT OVER-CORRECTION
         totalTorque = Mathf.Clamp(totalTorque, -maxStabilityTorque, maxStabilityTorque);
 
-        // Apply smoothly
         float smoothedTorque = totalTorque * Time.fixedDeltaTime;
         bikeRigidbody.AddTorque(smoothedTorque, ForceMode2D.Force);
 
+        // IF ANGULAR VELOCITY IS TOO HIGH, SLOW IT DOWN TO PREVENT SPINNING OUT
         if (Mathf.Abs(angularVel) > 1000f)
         {
             bikeRigidbody.angularVelocity *= 0.9f;

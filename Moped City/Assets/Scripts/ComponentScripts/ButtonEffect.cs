@@ -41,7 +41,6 @@ public class ButtonEffect : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             SetupAudioSource();
         }
         else

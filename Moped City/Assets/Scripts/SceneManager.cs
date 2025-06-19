@@ -10,6 +10,7 @@ public class SceneManager : MonoBehaviour
     public CanvasGroup fadeCanvasGroup;
 
     [SerializeField] private GameObject GameOverUI;
+    [SerializeField] private GameObject GameWonUI;
 
     public enum GamePhase
     {
@@ -18,7 +19,8 @@ public class SceneManager : MonoBehaviour
         Loading,
         Gameplay,
         Paused,
-        GameOver
+        GameOver,
+        GameWon
     }
 
     private GamePhase currentPhase = GamePhase.MainMenu;
@@ -39,13 +41,10 @@ public class SceneManager : MonoBehaviour
 
     private IEnumerator LoadSceneRoutine(string sceneName, GamePhase phase)
     {
-        // Start fade out
         yield return StartCoroutine(FadeRoutine(1f));
 
-        // Change to loading phase
         ChangePhase(GamePhase.Loading);
 
-        // Load the new scene
         AsyncOperation asyncLoad = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
 
         while (!asyncLoad.isDone)
@@ -53,19 +52,15 @@ public class SceneManager : MonoBehaviour
             yield return null;
         }
 
-        // Change to specified phase
         ChangePhase(phase);
 
-        // Ensure ButtonEffect refreshes after scene is fully loaded
         if (ButtonEffect.Instance != null)
         {
             ButtonEffect.Instance.RefreshButtons();
         }
 
-        // Fade back in
         yield return StartCoroutine(FadeRoutine(0f));
 
-        // Refresh buttons again after fade to ensure everything is properly set up
         if (ButtonEffect.Instance != null)
         {
             ButtonEffect.Instance.RefreshButtons();
@@ -119,5 +114,12 @@ public class SceneManager : MonoBehaviour
             ChangePhase(GamePhase.Gameplay);
             GameOverUI.SetActive(false);
         }
+    }
+
+    public void GameWonScreen()
+    {
+        Debug.Log("Game Won! Transitioning to GameWon phase.");
+        ChangePhase(GamePhase.GameWon);
+        GameWonUI.SetActive(true);
     }
 }
